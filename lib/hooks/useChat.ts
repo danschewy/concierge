@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react';
 import type { ChatMessage, CardType } from '@/lib/types';
 import type { ToolName } from '@/lib/types/tools';
 import { generateId } from '@/lib/utils/format';
+import { appendMissionHistory } from '@/lib/utils/mission-history';
 
 // Map tool names to card types
 const TOOL_CARD_MAP: Partial<Record<ToolName, CardType>> = {
@@ -199,6 +200,10 @@ export function useChat() {
 
             const toolName = event.toolName as ToolName;
             const cardType = event.cardType || TOOL_CARD_MAP[toolName];
+
+            if (event.toolName) {
+              appendMissionHistory(event.toolName, event.result);
+            }
 
             // Update the tool_call status to complete
             setMessages(prev => {

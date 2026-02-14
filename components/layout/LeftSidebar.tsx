@@ -3,7 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import UpcomingEvents from '@/components/widgets/UpcomingEvents';
 import FinancialHealth from '@/components/widgets/FinancialHealth';
-import type { CalendarEvent, FinancialSummary } from '@/lib/types';
+import type { CalendarEvent, FinancialSummary, MissionHistoryItem } from '@/lib/types';
+import { relativeTime } from '@/lib/utils/format';
+import {
+  getMissionHistory,
+  MISSION_HISTORY_UPDATED_EVENT,
+} from '@/lib/utils/mission-history';
 
 const SIDEBAR_REFRESH_MS = 60_000;
 
@@ -11,6 +16,7 @@ export default function LeftSidebar() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [financialSummary, setFinancialSummary] =
     useState<FinancialSummary | null>(null);
+  const [missionHistory, setMissionHistory] = useState<MissionHistoryItem[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
@@ -66,6 +72,27 @@ export default function LeftSidebar() {
       .slice(0, 3);
   }, [events]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncMissionHistory = () => {
+      setMissionHistory(getMissionHistory());
+    };
+
+    const handleStorageUpdate = () => {
+      syncMissionHistory();
+    };
+
+    syncMissionHistory();
+    window.addEventListener(MISSION_HISTORY_UPDATED_EVENT, handleStorageUpdate);
+    window.addEventListener('storage', handleStorageUpdate);
+
+    return () => {
+      window.removeEventListener(MISSION_HISTORY_UPDATED_EVENT, handleStorageUpdate);
+      window.removeEventListener('storage', handleStorageUpdate);
+    };
+  }, []);
+
   const now = new Date();
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 18 ? 'Good afternoon' : 'Good evening';
   const dateStr = now.toLocaleDateString('en-US', {
@@ -101,9 +128,37 @@ export default function LeftSidebar() {
       {/* Mission History */}
       <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4">
         <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Mission History</span>
-        <p className="text-xs text-zinc-500 mt-3">
-          Completed missions will appear here after your first run.
-        </p>
+        {missionHistory.length === 0 ? (
+          <p className="text-xs text-zinc-500 mt-3">
+            Completed missions will appear here after your first run.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {missionHistory.slice(0, 5).map((mission) => {
+              const completedAt = new Date(mission.completedAt);
+              const timeLabel = Number.isNaN(completedAt.getTime())
+                ? 'just now'
+                : relativeTime(completedAt);
+
+              return (
+                <div
+                  key={mission.id}
+                  className="rounded-md border border-[var(--border-default)] bg-zinc-900/30 px-2.5 py-2"
+                >
+                  <p className="text-xs text-zinc-200">{mission.summary}</p>
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-wide text-zinc-500">
+                      {mission.command}
+                    </span>
+                    <span className="text-[10px] text-emerald-400">
+                      Completed {timeLabel}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </aside>
   );

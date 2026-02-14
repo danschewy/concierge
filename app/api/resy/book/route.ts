@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { buildBookingRedirectUrl } from '@/lib/utils/booking-urls';
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +23,14 @@ export async function POST(request: Request) {
       partySize: party_size,
       confirmationCode: `RES-${Math.floor(10000 + Math.random() * 90000)}`,
       source: 'resy' as const,
-      status: 'confirmed' as const,
+      status: 'pending' as const,
+      bookingUrl: buildBookingRedirectUrl({
+        provider: 'resy',
+        venue: String(venue_id),
+        date: String(date),
+        time: String(time),
+        partySize: Number(party_size),
+      }),
       cancellationPolicy: 'Free cancellation up to 24 hours before',
     };
 
