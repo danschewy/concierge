@@ -1,10 +1,9 @@
 import type { BikeStation } from '@/lib/types';
-import { mockBikeStations } from '@/lib/mock-data';
 
 const GBFS_STATUS_URL =
-  'https://gbfs.citibikenyc.com/gbfs/2.3/station_status.json';
+  'https://gbfs.lyft.com/gbfs/1.1/bkn/en/station_status.json';
 const GBFS_INFO_URL =
-  'https://gbfs.citibikenyc.com/gbfs/2.3/station_information.json';
+  'https://gbfs.lyft.com/gbfs/1.1/bkn/en/station_information.json';
 
 interface GBFSStationStatus {
   station_id: string;
@@ -79,15 +78,15 @@ export async function getBikeAvailability(
   try {
     // Fetch station info and status in parallel
     const [infoRes, statusRes] = await Promise.all([
-      fetch(GBFS_INFO_URL),
-      fetch(GBFS_STATUS_URL),
+      fetch(GBFS_INFO_URL, { cache: 'no-store' }),
+      fetch(GBFS_STATUS_URL, { cache: 'no-store' }),
     ]);
 
     if (!infoRes.ok || !statusRes.ok) {
       console.error(
         `GBFS API error: info=${infoRes.status}, status=${statusRes.status}`
       );
-      return mockBikeStations;
+      return [];
     }
 
     const infoData: GBFSInfoResponse = await infoRes.json();
@@ -125,7 +124,7 @@ export async function getBikeAvailability(
       .slice(0, 5);
 
     if (stationsWithDistance.length === 0) {
-      return mockBikeStations;
+      return [];
     }
 
     return stationsWithDistance.map((s) => ({
@@ -139,6 +138,6 @@ export async function getBikeAvailability(
     }));
   } catch (error) {
     console.error('Error fetching Citi Bike data:', error);
-    return mockBikeStations;
+    return [];
   }
 }

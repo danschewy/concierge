@@ -21,6 +21,22 @@ function bikeCountBg(count: number): string {
 }
 
 export default function BikeAvailabilityCard({ data }: BikeAvailabilityCardProps) {
+  if (data.length === 0) {
+    return (
+      <CardShell>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Bike className="w-5 h-5 text-emerald-400" />
+            <span className="font-medium text-zinc-200">Citi Bike Stations</span>
+          </div>
+          <div className="rounded-md border border-zinc-800/80 bg-zinc-900/40 px-3 py-4 text-sm text-zinc-400">
+            No live station availability right now. Verify location permission and try again.
+          </div>
+        </div>
+      </CardShell>
+    );
+  }
+
   return (
     <CardShell>
       <div className="space-y-3">

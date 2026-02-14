@@ -136,7 +136,12 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
         const response = await fetch(`/api/transit/bikes?${params}`, {
           cache: 'no-store',
         });
-        if (!response.ok) return;
+        if (!response.ok) {
+          if (!isCancelled) {
+            setBikeStations([]);
+          }
+          return;
+        }
 
         const data = (await response.json()) as BikeStation[];
         if (!isCancelled && Array.isArray(data)) {
@@ -144,6 +149,9 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
         }
       } catch (error) {
         console.error('Failed to refresh bike stations:', error);
+        if (!isCancelled) {
+          setBikeStations([]);
+        }
       }
     };
 
@@ -292,6 +300,11 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
           {locationStatus === 'pending'
             ? 'Waiting for location permission...'
             : 'Location unavailable. Enable browser location for live nearby data.'}
+        </div>
+      )}
+      {locationStatus === 'live' && bikeStations.length === 0 && (
+        <div className="absolute bottom-2 left-2 rounded bg-zinc-900/80 px-2 py-1 text-[10px] text-zinc-300">
+          No live Citi Bike stations available nearby right now.
         </div>
       )}
     </div>
