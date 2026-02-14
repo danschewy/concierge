@@ -217,19 +217,20 @@ export async function POST(request: Request) {
 
                     // Execute the tool
                     try {
-                      const result = await executeTool(
+                      const execution = await executeTool(
                         tool.name as ToolName,
                         tool.input
                       );
 
-                      const cardType = TOOL_CARD_MAP[tool.name as ToolName];
+                      const cardType =
+                        execution.cardType ?? TOOL_CARD_MAP[tool.name as ToolName];
 
                       // Send tool_result event
                       controller.enqueue(
                         encoder.encode(createSSEEvent({
                           type: 'tool_result',
                           toolName: tool.name,
-                          result,
+                          result: execution.result,
                           cardType: cardType || undefined,
                         }))
                       );
@@ -237,7 +238,7 @@ export async function POST(request: Request) {
                       toolResults.push({
                         type: 'tool_result',
                         tool_use_id: tool.id,
-                        content: JSON.stringify(result),
+                        content: JSON.stringify(execution.result),
                       });
                     } catch (toolError) {
                       const errorMessage = toolError instanceof Error

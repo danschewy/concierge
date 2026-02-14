@@ -20,6 +20,10 @@ const weatherEmoji: Record<string, string> = {
 };
 
 export default function WeatherCard({ data }: WeatherCardProps) {
+  const hourlyForecast = Array.isArray(data.hourlyForecast)
+    ? data.hourlyForecast
+    : [];
+
   return (
     <CardShell>
       <div className="space-y-3">
@@ -44,7 +48,7 @@ export default function WeatherCard({ data }: WeatherCardProps) {
         </div>
 
         <div className="flex gap-2 pt-1 border-t border-zinc-800">
-          {data.hourlyForecast.slice(0, 4).map((hour, i) => (
+          {hourlyForecast.slice(0, 4).map((hour, i) => (
             <div key={i} className="flex-1 text-center py-1">
               <div className="text-[10px] text-zinc-500 mb-1">{hour.time}</div>
               <div className="text-sm">{weatherEmoji[hour.condition] || <Cloud className="w-4 h-4 mx-auto text-zinc-500" />}</div>
