@@ -1,0 +1,2 @@
+export const COOL_TEST_MESSAGE =
+  'Run a live concierge systems check for my current location. Call real tools where available in this order: get_weather, get_subway_status for a busy nearby station, get_bike_availability near me, check_budget for this week, search_events for tonight, search_restaurants for an open moderately priced dinner, and search_web for major NYC disruptions tonight. Do not place orders or book anything. Then give me a concise summary with recommendations and tradeoffs.';

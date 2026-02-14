@@ -1,6 +1,7 @@
 'use client';
 
 import { Zap } from 'lucide-react';
+import { COOL_TEST_MESSAGE } from '@/lib/constants/prompts';
 
 interface QuickActionsProps {
   onAction: (prefill: string) => void;
@@ -24,6 +25,17 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
         <Zap className="w-4 h-4 text-zinc-500" />
         <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Quick Actions</span>
       </div>
+
+      <button
+        onClick={() => onAction(COOL_TEST_MESSAGE)}
+        className="w-full mb-3 rounded-lg border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 to-sky-500/10
+          px-3 py-2 text-left transition-colors hover:border-emerald-400/40"
+      >
+        <div className="text-xs text-zinc-200 font-medium">Cool Test Message</div>
+        <div className="text-[11px] text-zinc-400 mt-0.5">
+          Generates a multi-tool live demo prompt.
+        </div>
+      </button>
 
       <div className="grid grid-cols-2 gap-2">
         {actions.map((action) => (

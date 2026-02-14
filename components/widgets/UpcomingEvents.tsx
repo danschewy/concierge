@@ -25,6 +25,9 @@ export default function UpcomingEvents({ events }: UpcomingEventsProps) {
       </div>
 
       <div className="space-y-2.5">
+        {events.length === 0 && (
+          <p className="text-xs text-zinc-500">No upcoming events yet.</p>
+        )}
         {events.map((event) => {
           const urgency = getUrgencyBadge(event.datetime);
           return (

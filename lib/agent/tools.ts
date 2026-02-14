@@ -75,14 +75,14 @@ export const TOOL_DEFINITIONS: Tool[] = [
   {
     name: 'get_subway_status',
     description:
-      'Get real-time MTA subway arrival times, service alerts, and delay information for a specific station. Covers all NYC subway lines (1-7, A-G, J, L, M, N, Q, R, S, W, Z). Use this to check commute viability and decide between subway vs. rideshare.',
+      'Get real-time MTA subway arrival times, service alerts, and delay information for a specific station. Covers all NYC subway lines (1-7, A-G, J, L, M, N, Q, R, S, W, Z). If station is omitted, defaults to a station near the user location. Use this to check commute viability and decide between subway vs. rideshare.',
     input_schema: {
       type: 'object',
       properties: {
         station: {
           type: 'string',
           description:
-            'Subway station name, e.g. "Spring St", "Times Sq-42 St", "Broadway-Lafayette"',
+            'Optional subway station name, e.g. "Spring St", "Times Sq-42 St", "Broadway-Lafayette". Defaults to nearest station to the user location.',
         },
         line: {
           type: 'string',
@@ -90,7 +90,7 @@ export const TOOL_DEFINITIONS: Tool[] = [
             'Specific subway line to check, e.g. "6", "A", "N". If omitted, returns all lines at the station.',
         },
       },
-      required: ['station'],
+      required: [],
     },
   },
   {
@@ -136,14 +136,14 @@ export const TOOL_DEFINITIONS: Tool[] = [
   {
     name: 'book_ride',
     description:
-      'Book an Uber ride in NYC. Supports UberX, UberXL, Uber Black, and Uber Comfort. Use this when the subway is delayed, weather is bad, or the user is running late and needs a car. Always check the user budget first for premium ride types.',
+      'Book an Uber ride in NYC. Supports UberX, UberXL, Uber Black, and Uber Comfort. Use this when the subway is delayed, weather is bad, or the user is running late and needs a car. If pickup is omitted, defaults to the user location. Always check the user budget first for premium ride types.',
     input_schema: {
       type: 'object',
       properties: {
         pickup: {
           type: 'string',
           description:
-            'Pickup address or intersection in NYC, e.g. "Broadway & Spring St"',
+            'Optional pickup address or intersection in NYC, e.g. "Broadway & Spring St". Defaults to user location.',
         },
         dropoff: {
           type: 'string',
@@ -156,7 +156,7 @@ export const TOOL_DEFINITIONS: Tool[] = [
             'Type of ride: "UberX" (default), "UberXL", "Uber Black", "Uber Comfort"',
         },
       },
-      required: ['pickup', 'dropoff'],
+      required: ['dropoff'],
     },
   },
   {
@@ -188,13 +188,13 @@ export const TOOL_DEFINITIONS: Tool[] = [
   {
     name: 'create_delivery',
     description:
-      'Create a DoorDash Drive delivery to pick up items from one NYC location and deliver to another. Use for errands like picking up dry cleaning, pharmacy orders, or packages.',
+      'Create a DoorDash Drive delivery to pick up items from one NYC location and deliver to another. Use for errands like picking up dry cleaning, pharmacy orders, or packages. If pickup is omitted, defaults to the user location.',
     input_schema: {
       type: 'object',
       properties: {
         pickup_address: {
           type: 'string',
-          description: 'Address to pick up items from.',
+          description: 'Optional address to pick up items from. Defaults to user location.',
         },
         dropoff_address: {
           type: 'string',
@@ -206,7 +206,7 @@ export const TOOL_DEFINITIONS: Tool[] = [
             'Description of items to be picked up and delivered, e.g. "2 suits from dry cleaner", "prescription from CVS"',
         },
       },
-      required: ['pickup_address', 'dropoff_address', 'items'],
+      required: ['dropoff_address', 'items'],
     },
   },
   {

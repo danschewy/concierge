@@ -1,19 +1,76 @@
 'use client';
 
-import { useState } from 'react';
-import { mockCalendarEvents, mockFinancialSummary } from '@/lib/mock-data';
+import { useEffect, useMemo, useState } from 'react';
 import { formatTime } from '@/lib/utils/format';
 import { MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import LiveMap from '@/components/widgets/LiveMap';
+import { COOL_TEST_MESSAGE } from '@/lib/constants/prompts';
+import type { CalendarEvent, FinancialSummary } from '@/lib/types';
+
+const MOBILE_REFRESH_MS = 60_000;
 
 interface MobileHeaderProps {
   onQuickAction: (text: string) => void;
 }
 
 export function MobileTopBar() {
-  const nextEvent = mockCalendarEvents[0];
-  const remaining = mockFinancialSummary.weeklyBudget - mockFinancialSummary.weeklySpend;
-  const percentUsed = Math.round((mockFinancialSummary.weeklySpend / mockFinancialSummary.weeklyBudget) * 100);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadMobileData = async () => {
+      try {
+        const [eventsResponse, financesResponse] = await Promise.all([
+          fetch('/api/calendar/events', { cache: 'no-store' }),
+          fetch('/api/plaid/transactions?period=week', { cache: 'no-store' }),
+        ]);
+
+        if (eventsResponse.ok) {
+          const nextEvents = (await eventsResponse.json()) as CalendarEvent[];
+          if (!isCancelled && Array.isArray(nextEvents)) {
+            setEvents(nextEvents);
+          }
+        }
+
+        if (financesResponse.ok) {
+          const nextFinances = (await financesResponse.json()) as FinancialSummary;
+          if (!isCancelled && nextFinances && Array.isArray(nextFinances.dailySpend)) {
+            setFinancialSummary(nextFinances);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh mobile top bar:', error);
+      }
+    };
+
+    void loadMobileData();
+    const intervalId = window.setInterval(() => {
+      void loadMobileData();
+    }, MOBILE_REFRESH_MS);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const nextEvent = useMemo(() => {
+    return [...events]
+      .filter((event) => !Number.isNaN(new Date(event.datetime).getTime()))
+      .sort(
+        (a, b) =>
+          new Date(a.datetime).getTime() - new Date(b.datetime).getTime()
+      )[0] ?? null;
+  }, [events]);
+
+  const remaining = financialSummary
+    ? financialSummary.weeklyBudget - financialSummary.weeklySpend
+    : null;
+  const percentUsed = financialSummary && financialSummary.weeklyBudget > 0
+    ? Math.round((financialSummary.weeklySpend / financialSummary.weeklyBudget) * 100)
+    : 0;
   const barColor = percentUsed < 50 ? 'bg-emerald-500' : percentUsed < 80 ? 'bg-amber-500' : 'bg-rose-500';
 
   return (
@@ -35,7 +92,9 @@ export function MobileTopBar() {
         <div className="w-16 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
           <div className={`h-full rounded-full ${barColor}`} style={{ width: `${percentUsed}%` }} />
         </div>
-        <span className="font-mono text-[10px] text-zinc-400">${remaining}</span>
+        <span className="font-mono text-[10px] text-zinc-400">
+          {remaining === null ? 'Live' : `$${Math.round(remaining)}`}
+        </span>
       </div>
     </div>
   );
@@ -67,6 +126,7 @@ export function MobileMapSection() {
 
 export function MobileQuickActions({ onQuickAction }: MobileHeaderProps) {
   const actions = [
+    { icon: '🧪', label: 'Test', prefill: COOL_TEST_MESSAGE },
     { icon: '🚇', label: 'Subway', prefill: "When's the next train near me?" },
     { icon: '🚗', label: 'Ride', prefill: 'Get me a ride to ' },
     { icon: '🍕', label: 'Food', prefill: 'Order me something to eat' },

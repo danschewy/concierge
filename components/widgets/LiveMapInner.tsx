@@ -27,12 +27,15 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
   const bikeMarkers = useRef<mapboxgl.Marker[]>([]);
   const hasCenteredOnUser = useRef(false);
   const [bikeStations, setBikeStations] = useState<BikeStation[]>([]);
-  const [isLiveLocation, setIsLiveLocation] = useState(false);
-  const [userLocation, setUserLocation] = useState({
-    latitude: NYC_DEFAULTS.latitude,
-    longitude: NYC_DEFAULTS.longitude,
-  });
-  const userLocationRef = useRef(userLocation);
+  const [locationStatus, setLocationStatus] = useState<'pending' | 'live' | 'unavailable'>('pending');
+  const [userLocation, setUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const userLocationRef = useRef<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -54,6 +57,7 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
 
     m.on('load', () => {
       const currentLocation = userLocationRef.current;
+      if (!currentLocation) return;
 
       // User marker
       const userEl = document.createElement('div');
@@ -76,8 +80,13 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
   }, [token]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
-      return;
+    if (typeof window === 'undefined') return;
+
+    if (!('geolocation' in navigator)) {
+      const id = window.setTimeout(() => {
+        setLocationStatus('unavailable');
+      }, 0);
+      return () => window.clearTimeout(id);
     }
 
     let isCancelled = false;
@@ -90,10 +99,12 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
           });
-          setIsLiveLocation(true);
+          setLocationStatus('live');
         },
         () => {
-          // Keep fallback location if user denies permission.
+          if (!isCancelled) {
+            setLocationStatus('unavailable');
+          }
         },
         {
           enableHighAccuracy: true,
@@ -113,6 +124,7 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
   }, []);
 
   useEffect(() => {
+    if (!userLocation) return;
     let isCancelled = false;
 
     const refreshBikeStations = async () => {
@@ -144,9 +156,10 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
       isCancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [userLocation.latitude, userLocation.longitude]);
+  }, [userLocation]);
 
   useEffect(() => {
+    if (!userLocation) return;
     userLocationRef.current = {
       latitude: userLocation.latitude,
       longitude: userLocation.longitude,
@@ -154,7 +167,7 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
     if (!userMarker.current || !map.current) return;
 
     userMarker.current.setLngLat([userLocation.longitude, userLocation.latitude]);
-    if (isLiveLocation && !hasCenteredOnUser.current) {
+    if (locationStatus === 'live' && !hasCenteredOnUser.current) {
       map.current.flyTo({
         center: [userLocation.longitude, userLocation.latitude],
         zoom: 13.5,
@@ -162,7 +175,7 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
       });
       hasCenteredOnUser.current = true;
     }
-  }, [isLiveLocation, userLocation.latitude, userLocation.longitude]);
+  }, [locationStatus, userLocation]);
 
   useEffect(() => {
     if (!map.current) return;
@@ -272,8 +285,15 @@ export default function LiveMapInner({ rideStatus }: LiveMapInnerProps) {
   }
 
   return (
-    <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg overflow-hidden h-[240px]">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg overflow-hidden h-[240px] relative">
       <div ref={mapContainer} className="w-full h-full" />
+      {locationStatus !== 'live' && (
+        <div className="absolute top-2 left-2 rounded bg-zinc-900/80 px-2 py-1 text-[10px] text-zinc-300">
+          {locationStatus === 'pending'
+            ? 'Waiting for location permission...'
+            : 'Location unavailable. Enable browser location for live nearby data.'}
+        </div>
+      )}
     </div>
   );
 }

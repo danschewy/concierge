@@ -17,7 +17,7 @@ export interface SearchWebInput {
 }
 
 export interface GetSubwayStatusInput {
-  station: string;
+  station?: string;
   line?: string;
 }
 
@@ -32,7 +32,7 @@ export interface GetBikeAvailabilityInput {
 }
 
 export interface BookRideInput {
-  pickup: string;
+  pickup?: string;
   dropoff: string;
   ride_type?: string;
 }
@@ -44,7 +44,7 @@ export interface OrderFoodInput {
 }
 
 export interface CreateDeliveryInput {
-  pickup_address: string;
+  pickup_address?: string;
   dropoff_address: string;
   items: string;
 }

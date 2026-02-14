@@ -1,11 +1,77 @@
 'use client';
 
+import { useEffect, useMemo, useState } from 'react';
 import { MapPin, Settings } from 'lucide-react';
 import BlaxelStatus from '@/components/widgets/BlaxelStatus';
 import WeatherMini from '@/components/widgets/WeatherMini';
-import { mockWeather } from '@/lib/mock-data';
+import type { WeatherData } from '@/lib/types';
+
+const HEADER_WEATHER_REFRESH_MS = 10 * 60 * 1000;
 
 export default function Header() {
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      () => {},
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 5 * 60 * 1000,
+      }
+    );
+  }, []);
+
+  const latitude = location?.latitude;
+  const longitude = location?.longitude;
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadWeather = async () => {
+      try {
+        const query =
+          typeof latitude === 'number' && typeof longitude === 'number'
+          ? `?latitude=${latitude}&longitude=${longitude}`
+          : '';
+        const response = await fetch(`/api/weather${query}`, { cache: 'no-store' });
+        if (!response.ok) return;
+
+        const data = (await response.json()) as WeatherData;
+        if (!isCancelled && data && typeof data.temp === 'number') {
+          setWeather(data);
+        }
+      } catch (error) {
+        console.error('Failed to refresh header weather:', error);
+      }
+    };
+
+    void loadWeather();
+    const intervalId = window.setInterval(() => {
+      void loadWeather();
+    }, HEADER_WEATHER_REFRESH_MS);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [latitude, longitude]);
+
+  const locationLabel = useMemo(() => {
+    if (location) return 'Live location';
+    if (weather) return 'NYC fallback';
+    return 'Locating...';
+  }, [location, weather]);
+
   const now = new Date().toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
@@ -23,10 +89,14 @@ export default function Header() {
           </h1>
           <div className="hidden sm:flex items-center gap-1.5 text-zinc-500">
             <MapPin className="w-3 h-3" />
-            <span className="text-xs">SoHo, NYC</span>
+            <span className="text-xs">{locationLabel}</span>
           </div>
           <div className="hidden sm:block">
-            <WeatherMini data={mockWeather} />
+            {weather ? (
+              <WeatherMini data={weather} />
+            ) : (
+              <span className="font-mono text-xs text-zinc-500">--°F</span>
+            )}
           </div>
         </div>
 

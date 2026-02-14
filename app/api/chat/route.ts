@@ -34,6 +34,24 @@ interface UserLocation {
   longitude: number;
 }
 
+interface ReferenceStation {
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
+const REFERENCE_SUBWAY_STATIONS: ReferenceStation[] = [
+  { name: '14 St-Union Sq', latitude: 40.735736, longitude: -73.990568 },
+  { name: 'Times Sq-42 St', latitude: 40.75529, longitude: -73.987495 },
+  { name: 'Grand Central-42 St', latitude: 40.751776, longitude: -73.976848 },
+  { name: '34 St-Penn Station', latitude: 40.750373, longitude: -73.991057 },
+  { name: 'Atlantic Av-Barclays Ctr', latitude: 40.684461, longitude: -73.97689 },
+  { name: 'Canal St', latitude: 40.719527, longitude: -74.001775 },
+  { name: 'Spring St', latitude: 40.722301, longitude: -73.997141 },
+  { name: '72 St', latitude: 40.778453, longitude: -73.98197 },
+  { name: '125 St', latitude: 40.807722, longitude: -73.945495 },
+];
+
 function parseUserLocation(value: unknown): UserLocation | null {
   if (!value || typeof value !== 'object') {
     return null;
@@ -63,6 +81,69 @@ function parseUserLocation(value: unknown): UserLocation | null {
   return { latitude, longitude };
 }
 
+function toRadians(value: number): number {
+  return (value * Math.PI) / 180;
+}
+
+function haversineMiles(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const earthRadiusMiles = 3958.8;
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) *
+      Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusMiles * c;
+}
+
+function getNearestSubwayStation(userLocation: UserLocation): string {
+  let nearestStation = REFERENCE_SUBWAY_STATIONS[0];
+  let nearestDistance = Number.POSITIVE_INFINITY;
+
+  for (const station of REFERENCE_SUBWAY_STATIONS) {
+    const distance = haversineMiles(
+      userLocation.latitude,
+      userLocation.longitude,
+      station.latitude,
+      station.longitude
+    );
+
+    if (distance < nearestDistance) {
+      nearestStation = station;
+      nearestDistance = distance;
+    }
+  }
+
+  return nearestStation.name;
+}
+
+function isLocationPlaceholder(value: unknown): boolean {
+  if (typeof value !== 'string') return false;
+  const normalized = value.toLowerCase().trim();
+  if (!normalized) return true;
+
+  return (
+    normalized.includes('near me') ||
+    normalized.includes('my location') ||
+    normalized.includes('current location') ||
+    normalized === 'here' ||
+    normalized.includes('nearby') ||
+    normalized.includes('closest')
+  );
+}
+
+function formatCoordinateLabel(userLocation: UserLocation): string {
+  return `Current location (${userLocation.latitude.toFixed(5)}, ${userLocation.longitude.toFixed(5)})`;
+}
+
 function applyUserLocationDefaults(
   toolName: string,
   toolInput: Record<string, unknown>,
@@ -72,21 +153,73 @@ function applyUserLocationDefaults(
     return toolInput;
   }
 
-  if (toolName !== 'get_weather' && toolName !== 'get_bike_availability') {
-    return toolInput;
-  }
+  switch (toolName) {
+    case 'get_weather':
+    case 'get_bike_availability':
+      return {
+        ...toolInput,
+        latitude:
+          typeof toolInput.latitude === 'number'
+            ? toolInput.latitude
+            : userLocation.latitude,
+        longitude:
+          typeof toolInput.longitude === 'number'
+            ? toolInput.longitude
+            : userLocation.longitude,
+      };
 
-  return {
-    ...toolInput,
-    latitude:
-      typeof toolInput.latitude === 'number'
-        ? toolInput.latitude
-        : userLocation.latitude,
-    longitude:
-      typeof toolInput.longitude === 'number'
-        ? toolInput.longitude
-        : userLocation.longitude,
-  };
+    case 'get_subway_status': {
+      const station = toolInput.station;
+      if (
+        typeof station !== 'string' ||
+        station.trim().length === 0 ||
+        isLocationPlaceholder(station)
+      ) {
+        return {
+          ...toolInput,
+          station: getNearestSubwayStation(userLocation),
+        };
+      }
+
+      return toolInput;
+    }
+
+    case 'book_ride': {
+      const pickup = toolInput.pickup;
+      return {
+        ...toolInput,
+        pickup:
+          typeof pickup === 'string' &&
+          pickup.trim().length > 0 &&
+          !isLocationPlaceholder(pickup)
+            ? pickup
+            : formatCoordinateLabel(userLocation),
+      };
+    }
+
+    case 'create_delivery': {
+      const pickupAddress = toolInput.pickup_address;
+      const dropoffAddress = toolInput.dropoff_address;
+      return {
+        ...toolInput,
+        pickup_address:
+          typeof pickupAddress === 'string' &&
+          pickupAddress.trim().length > 0 &&
+          !isLocationPlaceholder(pickupAddress)
+            ? pickupAddress
+            : formatCoordinateLabel(userLocation),
+        dropoff_address:
+          typeof dropoffAddress === 'string' &&
+          dropoffAddress.trim().length > 0 &&
+          !isLocationPlaceholder(dropoffAddress)
+            ? dropoffAddress
+            : formatCoordinateLabel(userLocation),
+      };
+    }
+
+    default:
+      return toolInput;
+  }
 }
 
 function createSSEEvent(data: Record<string, unknown>): string {

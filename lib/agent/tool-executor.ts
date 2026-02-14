@@ -48,8 +48,12 @@ export async function executeTool(
     }
 
     case 'get_subway_status': {
+      const station =
+        typeof toolArgs.station === 'string' && toolArgs.station.trim().length > 0
+          ? toolArgs.station
+          : 'Times Sq-42 St';
       const result = await mta.getSubwayStatus(
-        toolArgs.station as string,
+        station,
         toolArgs.line as string | undefined
       );
       return { result, cardType: 'subway_status' };
@@ -72,9 +76,17 @@ export async function executeTool(
     }
 
     case 'book_ride': {
+      const pickup =
+        typeof toolArgs.pickup === 'string' && toolArgs.pickup.trim().length > 0
+          ? toolArgs.pickup
+          : 'Current location';
+      const dropoff =
+        typeof toolArgs.dropoff === 'string' && toolArgs.dropoff.trim().length > 0
+          ? toolArgs.dropoff
+          : 'Current location';
       const result = await uber.bookRide(
-        toolArgs.pickup as string,
-        toolArgs.dropoff as string,
+        pickup,
+        dropoff,
         toolArgs.ride_type as string | undefined
       );
       return { result, cardType: 'ride_status' };
@@ -90,10 +102,24 @@ export async function executeTool(
     }
 
     case 'create_delivery': {
+      const pickupAddress =
+        typeof toolArgs.pickup_address === 'string' &&
+        toolArgs.pickup_address.trim().length > 0
+          ? toolArgs.pickup_address
+          : 'Current location';
+      const dropoffAddress =
+        typeof toolArgs.dropoff_address === 'string' &&
+        toolArgs.dropoff_address.trim().length > 0
+          ? toolArgs.dropoff_address
+          : 'Current location';
+      const items =
+        typeof toolArgs.items === 'string' && toolArgs.items.trim().length > 0
+          ? toolArgs.items
+          : 'Package';
       const result = await doordash.createDelivery(
-        toolArgs.pickup_address as string,
-        toolArgs.dropoff_address as string,
-        toolArgs.items as string
+        pickupAddress,
+        dropoffAddress,
+        items
       );
       return { result, cardType: 'errand' };
     }

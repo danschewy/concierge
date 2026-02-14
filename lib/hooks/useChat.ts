@@ -4,7 +4,6 @@ import { useState, useCallback, useRef } from 'react';
 import type { ChatMessage, CardType } from '@/lib/types';
 import type { ToolName } from '@/lib/types/tools';
 import { generateId } from '@/lib/utils/format';
-import { getDemoMessages } from '@/lib/mock-data';
 
 // Map tool names to card types
 const TOOL_CARD_MAP: Partial<Record<ToolName, CardType>> = {
@@ -36,7 +35,7 @@ interface UserLocation {
 }
 
 export function useChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>(getDemoMessages());
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const userLocationRef = useRef<UserLocation | null>(null);

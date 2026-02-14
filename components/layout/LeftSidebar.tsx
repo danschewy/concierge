@@ -3,16 +3,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import UpcomingEvents from '@/components/widgets/UpcomingEvents';
 import FinancialHealth from '@/components/widgets/FinancialHealth';
-import { mockCalendarEvents, mockFinancialSummary, mockMissionHistory } from '@/lib/mock-data';
-import { relativeTime } from '@/lib/utils/format';
 import type { CalendarEvent, FinancialSummary } from '@/lib/types';
 
 const SIDEBAR_REFRESH_MS = 60_000;
 
 export default function LeftSidebar() {
-  const [events, setEvents] = useState<CalendarEvent[]>(mockCalendarEvents);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [financialSummary, setFinancialSummary] =
-    useState<FinancialSummary>(mockFinancialSummary);
+    useState<FinancialSummary | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
     let isCancelled = false;
@@ -39,6 +38,10 @@ export default function LeftSidebar() {
         }
       } catch (error) {
         console.error('Failed to refresh sidebar data:', error);
+      } finally {
+        if (!isCancelled) {
+          setHasLoaded(true);
+        }
       }
     };
 
@@ -84,20 +87,23 @@ export default function LeftSidebar() {
       <UpcomingEvents events={upcomingEvents} />
 
       {/* Finances */}
-      <FinancialHealth data={financialSummary} />
+      {financialSummary ? (
+        <FinancialHealth data={financialSummary} />
+      ) : (
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4">
+          <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Finances</span>
+          <p className="text-xs text-zinc-500 mt-3">
+            {hasLoaded ? 'Financial data unavailable right now.' : 'Loading live financial data...'}
+          </p>
+        </div>
+      )}
 
       {/* Mission History */}
       <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4">
         <span className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Mission History</span>
-        <div className="mt-3 space-y-2">
-          {mockMissionHistory.map((mission, i) => (
-            <div key={i} className="flex items-center gap-2 text-xs">
-              <span>{mission.icon}</span>
-              <span className="text-zinc-400 flex-1 truncate">{mission.summary}</span>
-              <span className="font-mono text-zinc-600 shrink-0">{relativeTime(mission.time)}</span>
-            </div>
-          ))}
-        </div>
+        <p className="text-xs text-zinc-500 mt-3">
+          Completed missions will appear here after your first run.
+        </p>
       </div>
     </aside>
   );
