@@ -134,6 +134,8 @@ export async function getBikeAvailability(
       availableDocks: s.status!.num_docks_available,
       distance: formatDistance(s.distance),
       walkingMinutes: estimateWalkingMinutes(s.distance),
+      latitude: s.info.lat,
+      longitude: s.info.lon,
     }));
   } catch (error) {
     console.error('Error fetching Citi Bike data:', error);

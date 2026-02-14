@@ -205,9 +205,33 @@ export const mockSearchResults: SearchResult[] = [
 
 // Bike availability
 export const mockBikeStations: BikeStation[] = [
-  { name: 'Broadway & Spring St', availableBikes: 8, availableDocks: 15, distance: '0.1 mi', walkingMinutes: 2 },
-  { name: 'Lafayette St & Jersey St', availableBikes: 3, availableDocks: 22, distance: '0.2 mi', walkingMinutes: 4 },
-  { name: 'Mercer St & Spring St', availableBikes: 0, availableDocks: 25, distance: '0.3 mi', walkingMinutes: 5 },
+  {
+    name: 'Broadway & Spring St',
+    availableBikes: 8,
+    availableDocks: 15,
+    distance: '0.1 mi',
+    walkingMinutes: 2,
+    latitude: 40.7243,
+    longitude: -73.9976,
+  },
+  {
+    name: 'Lafayette St & Jersey St',
+    availableBikes: 3,
+    availableDocks: 22,
+    distance: '0.2 mi',
+    walkingMinutes: 4,
+    latitude: 40.7240,
+    longitude: -73.9952,
+  },
+  {
+    name: 'Mercer St & Spring St',
+    availableBikes: 0,
+    availableDocks: 25,
+    distance: '0.3 mi',
+    walkingMinutes: 5,
+    latitude: 40.7232,
+    longitude: -73.9988,
+  },
 ];
 
 // Restaurants

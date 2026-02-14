@@ -170,6 +170,8 @@ export interface BikeStation {
   availableDocks: number;
   distance: string;
   walkingMinutes: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 // Restaurant

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { mockCalendarEvents } from '@/lib/mock-data';
+import * as calendar from '@/lib/services/calendar';
 
 export async function GET() {
   try {
-    // Return mock calendar events
-    return NextResponse.json(mockCalendarEvents);
+    const events = await calendar.getCalendarEvents();
+    return NextResponse.json(events);
   } catch (error) {
     console.error('Calendar events error:', error);
     return NextResponse.json(

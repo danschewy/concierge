@@ -5,7 +5,6 @@ import { mockCalendarEvents, mockFinancialSummary } from '@/lib/mock-data';
 import { formatTime } from '@/lib/utils/format';
 import { MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import LiveMap from '@/components/widgets/LiveMap';
-import { mockRideStatus } from '@/lib/mock-data';
 
 interface MobileHeaderProps {
   onQuickAction: (text: string) => void;
@@ -59,7 +58,7 @@ export function MobileMapSection() {
       </button>
       {expanded && (
         <div className="px-4 pb-3">
-          <LiveMap rideStatus={mockRideStatus} />
+          <LiveMap />
         </div>
       )}
     </div>

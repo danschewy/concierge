@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import type { RideStatus } from '@/lib/types';
-import { NYC_DEFAULTS, MAPBOX_DARK_STYLE } from '@/lib/constants';
 
 interface LiveMapProps {
   rideStatus?: RideStatus | null;
