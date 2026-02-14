@@ -1,36 +1,173 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Gotham Valet (Concierge)
 
-## Getting Started
+AI-powered NYC concierge built with Next.js.  
+It can chat, reason, call tools, and return rich UI cards for transit, weather, events, restaurants, rides, deliveries, calendar, and budget.
 
-First, run the development server:
+## What This Project Is
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+`Gotham Valet` is a single-page assistant interface with:
+
+- A streaming AI chat feed (`reasoning`, `tool_call`, `tool_result`, `assistant` events)
+- A three-panel desktop layout + mobile-focused compact layout
+- Tool-backed actions for NYC-specific workflows
+- Graceful fallback to mock data when provider keys are missing
+
+Primary runtime flow:
+
+1. User sends a message from `components/chat/ChatInput.tsx`
+2. `useChat` posts conversation to `POST /api/chat`
+3. The chat API calls Anthropic (if configured), receives tool requests, executes tools, and streams newline-delimited JSON events back
+4. Frontend renders both assistant text and typed result cards
+
+If `ANTHROPIC_API_KEY` is missing, `/api/chat` returns a mock demo stream so the UI still works end-to-end.
+
+## Tech Stack
+
+- Next.js App Router (`app/`)
+- React + TypeScript
+- Tailwind CSS v4
+- Framer Motion (interaction/animation)
+- Mapbox GL (`react-map-gl` + `mapbox-gl`)
+- Anthropic SDK (tool-using chat)
+
+## Project Structure
+
+```text
+concierge/
+├─ app/
+│  ├─ page.tsx                 # Main shell (header + sidebars + chat + voice orb)
+│  ├─ layout.tsx               # App metadata and fonts
+│  └─ api/                     # Route handlers backing each capability
+├─ components/
+│  ├─ layout/                  # Desktop/mobile shell
+│  ├─ chat/                    # Message feed + input + stream rendering
+│  ├─ cards/                   # Typed tool result cards
+│  ├─ widgets/                 # Side widgets (map, quick actions, finance, events)
+│  ├─ voice/                   # Voice orb/transcript UI
+│  └─ shared/                  # Reusable status/card primitives
+├─ lib/
+│  ├─ agent/                   # System prompt, tool definitions, tool executor
+│  ├─ services/                # API provider integrations + mocks/fallbacks
+│  ├─ hooks/                   # Chat stream + UI behavior hooks
+│  ├─ mock-data.ts             # Demo/mock payloads
+│  ├─ constants.ts             # NYC defaults and map constants
+│  └─ types/                   # Shared types
+└─ public/                     # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Integrations and Fallbacks
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Real provider calls when configured:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Anthropic
+- Ticketmaster
+- Google Places
+- Tavily
+- MTA GTFS-Realtime
+- Citi Bike GBFS
+- OpenWeather
+- DoorDash Drive
+- Plaid
+- Blaxel Agent proxy
 
-## Learn More
+Mock-first or mock-only paths in current code:
 
-To learn more about Next.js, take a look at the following resources:
+- Uber request/status routes
+- MealMe search/order routes
+- Resy routes + service
+- OpenTable routes + service
+- Calendar service/routes
+- SeatGeek route
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## API Surface
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Core chat
 
-## Deploy on Vercel
+- `POST /api/chat` (streaming NDJSON events)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Transit and weather
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `GET /api/transit/subway?station=...&line=...`
+- `GET /api/transit/bikes?latitude=...&longitude=...`
+- `GET /api/weather`
+
+### Search and discovery
+
+- `GET /api/events/search?query=...&date=...&category=...`
+- `GET /api/events/seatgeek`
+- `GET /api/places/search?query=...&location=...`
+- `POST /api/search` (`{ "query": "..." }`)
+
+### Actions
+
+- `POST /api/uber/request`
+- `GET /api/uber/status/:tripId`
+- `POST /api/mealme/order`
+- `GET /api/mealme/search`
+- `POST /api/doordash/delivery`
+- `GET /api/doordash/status/:id`
+- `POST /api/resy/book`
+- `GET /api/resy/search`
+- `POST /api/opentable/book`
+- `GET /api/opentable/search`
+
+### Finance and calendar
+
+- `GET /api/plaid/balance`
+- `GET /api/plaid/transactions?period=week|month|day`
+- `GET /api/calendar/events`
+- `POST /api/calendar/create`
+
+### External agent proxy
+
+- `POST /api/agent/execute`
+- `GET /api/agent/status`
+
+## Environment Variables
+
+Create `.env.local` in the project root (`concierge/`) and add what you need.
+
+```bash
+# AI
+ANTHROPIC_API_KEY=
+
+# Map / Voice (client-side)
+NEXT_PUBLIC_MAPBOX_TOKEN=
+NEXT_PUBLIC_ELEVENLABS_AGENT_ID=
+
+# Search / Discovery
+TICKETMASTER_API_KEY=
+GOOGLE_PLACES_API_KEY=
+TAVILY_API_KEY=
+OPENWEATHER_API_KEY=
+
+# DoorDash Drive
+DOORDASH_DEVELOPER_ID=
+DOORDASH_KEY_ID=
+DOORDASH_SIGNING_SECRET=
+
+# Plaid
+PLAID_ENV=sandbox
+PLAID_CLIENT_ID=
+PLAID_SECRET=
+PLAID_ACCESS_TOKEN=
+
+# Optional external agent backend
+BLAXEL_AGENT_URL=
+```
+
+## Run Locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Scripts
+
+- `npm run dev` - start development server
+- `npm run build` - production build
+- `npm run start` - run production server
+- `npm run lint` - run ESLint
