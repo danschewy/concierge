@@ -66,7 +66,7 @@ export default function Home() {
             </h1>
             <p className="mt-6 max-w-xl text-sm leading-relaxed text-zinc-300 sm:text-base">
               Gotham Valet plans, executes, and adapts across your schedule, subway delays, rides, weather,
-              dining, and budget so you stay ahead of the city.
+              dining, and budget, with Blaxel workers handling long-running delivery and ride tracking in the background.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -101,6 +101,7 @@ export default function Home() {
                 { icon: CarFront, text: 'Switching to rideshare when speed matters' },
                 { icon: CloudSun, text: 'Adjusting plans using current weather' },
                 { icon: MapPinned, text: 'Keeping routes centered around your next stop' },
+                { icon: CalendarClock, text: 'Monitoring long-running delivery updates via Blaxel jobs' },
               ].map(({ icon: Icon, text }, idx) => (
                 <motion.div
                   key={text}
@@ -204,11 +205,11 @@ export default function Home() {
             <p className="font-mono text-xs uppercase tracking-[0.16em] text-zinc-400">Signal mesh</p>
             <h2 className="mt-3 font-display text-3xl text-zinc-100 sm:text-5xl">Connected to every decision surface.</h2>
             <p className="mt-5 max-w-lg text-sm leading-relaxed text-zinc-300">
-              Gotham Valet combines real-time search, transit feeds, weather APIs, and service integrations to keep recommendations grounded in current conditions.
+              Gotham Valet combines real-time search, transit feeds, weather APIs, service integrations, and Blaxel background jobs to keep recommendations and card statuses grounded in current conditions.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {['Anthropic', 'MTA', 'Citi Bike', 'OpenWeather', 'Ticketmaster', 'Google Places', 'Tavily', 'DoorDash', 'Plaid', 'Resy', 'OpenTable', 'Calendar'].map((item, idx) => (
+            {['Anthropic', 'MTA', 'Citi Bike', 'OpenWeather', 'Ticketmaster', 'Google Places', 'Tavily', 'DoorDash', 'Plaid', 'Blaxel', 'Resy', 'OpenTable', 'Calendar'].map((item, idx) => (
               <motion.div
                 key={item}
                 className="flex h-20 items-center justify-center rounded-xl border border-white/12 bg-white/[0.04] text-center text-sm text-zinc-200"
