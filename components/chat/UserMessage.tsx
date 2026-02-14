@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import MarkdownMessage from './MarkdownMessage';
 
 interface UserMessageProps {
   content: string;
@@ -15,7 +16,9 @@ export default function UserMessage({ content }: UserMessageProps) {
     >
       <div className="max-w-[80%] flex items-start gap-2">
         <div className="bg-zinc-800 rounded-2xl rounded-tr-md px-4 py-2.5">
-          <p className="text-sm text-zinc-100">{content}</p>
+          <div className="text-zinc-100">
+            <MarkdownMessage content={content} variant="user" />
+          </div>
         </div>
         <div className="w-7 h-7 rounded-full bg-violet-500/20 flex items-center justify-center text-xs font-medium text-violet-300 shrink-0 mt-0.5">
           D

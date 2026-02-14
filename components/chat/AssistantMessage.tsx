@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import MarkdownMessage from './MarkdownMessage';
 
 interface AssistantMessageProps {
   content: string;
@@ -18,7 +19,9 @@ export default function AssistantMessage({ content }: AssistantMessageProps) {
           <span className="text-xs font-bold text-emerald-400">G</span>
         </div>
         <div className="bg-zinc-900 border border-[var(--border-default)] rounded-2xl rounded-tl-md px-4 py-2.5">
-          <p className="text-sm text-zinc-200 leading-relaxed whitespace-pre-wrap">{content}</p>
+          <div className="text-zinc-200">
+            <MarkdownMessage content={content} variant="assistant" />
+          </div>
         </div>
       </div>
     </motion.div>
