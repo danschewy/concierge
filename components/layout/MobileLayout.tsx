@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatTime } from '@/lib/utils/format';
 import { MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import LiveMap from '@/components/widgets/LiveMap';
-import { COOL_TEST_MESSAGE } from '@/lib/constants/prompts';
+import {
+  FEATURED_QUICK_ACTION,
+  MOBILE_QUICK_ACTIONS,
+} from '@/lib/constants/quick-actions';
 import type { CalendarEvent, FinancialSummary } from '@/lib/types';
 
 const MOBILE_REFRESH_MS = 60_000;
@@ -125,27 +128,21 @@ export function MobileMapSection() {
 }
 
 export function MobileQuickActions({ onQuickAction }: MobileHeaderProps) {
-  const actions = [
-    { icon: '🧪', label: 'Test', prefill: COOL_TEST_MESSAGE },
-    { icon: '🚇', label: 'Subway', prefill: "When's the next train near me?" },
-    { icon: '🚗', label: 'Ride', prefill: 'Get me a ride to ' },
-    { icon: '🍕', label: 'Food', prefill: 'Order me something to eat' },
-    { icon: '🎫', label: 'Events', prefill: "What's happening in NYC tonight?" },
-    { icon: '🚲', label: 'Bike', prefill: 'Any Citi Bikes available near me?' },
-    { icon: '🔍', label: 'Search', prefill: 'Search for ' },
-  ];
-
   return (
     <div className="xl:hidden lg:hidden flex gap-2 px-3 py-2 overflow-x-auto border-b border-[var(--border-default)]">
-      {actions.map((a) => (
+      {MOBILE_QUICK_ACTIONS.map((action) => (
         <button
-          key={a.label}
-          onClick={() => onQuickAction(a.prefill)}
-          className="shrink-0 flex items-center gap-1.5 bg-zinc-900 border border-[var(--border-default)]
-            hover:border-[var(--border-active)] rounded-full px-3 py-1.5 text-xs text-zinc-400 transition-colors"
+          key={action.id}
+          onClick={() => onQuickAction(action.prefill)}
+          className={`shrink-0 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs transition-colors ${
+            action.id === FEATURED_QUICK_ACTION.id
+              ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 hover:border-emerald-400/40'
+              : 'bg-zinc-900 border border-[var(--border-default)] text-zinc-400 hover:border-[var(--border-active)]'
+          }`}
+          title={action.description}
         >
-          <span>{a.icon}</span>
-          <span>{a.label}</span>
+          <span>{action.icon}</span>
+          <span>{action.label}</span>
         </button>
       ))}
     </div>
