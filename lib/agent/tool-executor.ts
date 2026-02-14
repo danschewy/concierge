@@ -18,6 +18,26 @@ interface ToolExecutionResult {
   cardType?: CardType;
 }
 
+function normalizeString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function isCoordinateLocationLabel(value: string): boolean {
+  return /^current location \(-?\d+(\.\d+)?,\s*-?\d+(\.\d+)?\)$/i.test(value);
+}
+
+function isLocationPlaceholder(value: string): boolean {
+  const normalized = value.toLowerCase();
+  if (!normalized) return true;
+  if (isCoordinateLocationLabel(value)) return false;
+  return (
+    normalized === 'current location' ||
+    normalized === 'near me' ||
+    normalized === 'my location' ||
+    normalized === 'here'
+  );
+}
+
 export async function executeTool(
   toolName: string,
   toolArgs: Record<string, unknown>
@@ -102,20 +122,22 @@ export async function executeTool(
     }
 
     case 'create_delivery': {
-      const pickupAddress =
-        typeof toolArgs.pickup_address === 'string' &&
-        toolArgs.pickup_address.trim().length > 0
-          ? toolArgs.pickup_address
-          : 'Current location';
-      const dropoffAddress =
-        typeof toolArgs.dropoff_address === 'string' &&
-        toolArgs.dropoff_address.trim().length > 0
-          ? toolArgs.dropoff_address
-          : 'Current location';
-      const items =
-        typeof toolArgs.items === 'string' && toolArgs.items.trim().length > 0
-          ? toolArgs.items
-          : 'Package';
+      const pickupAddress = normalizeString(toolArgs.pickup_address);
+      const dropoffAddress = normalizeString(toolArgs.dropoff_address);
+      const items = normalizeString(toolArgs.items) || 'Package';
+
+      if (!dropoffAddress || isLocationPlaceholder(dropoffAddress)) {
+        throw new Error(
+          'A valid dropoff address is required to create a DoorDash delivery.'
+        );
+      }
+
+      if (!pickupAddress || isLocationPlaceholder(pickupAddress)) {
+        throw new Error(
+          'A valid pickup address is required. Share browser location or provide pickup_address explicitly.'
+        );
+      }
+
       const result = await doordash.createDelivery(
         pickupAddress,
         dropoffAddress,

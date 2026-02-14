@@ -17,8 +17,9 @@ export async function POST(request: Request) {
     return NextResponse.json(delivery);
   } catch (error) {
     console.error('DoorDash delivery error:', error);
+    const message = error instanceof Error ? error.message : 'Failed to create delivery';
     return NextResponse.json(
-      { error: 'Failed to create delivery' },
+      { error: message },
       { status: 500 }
     );
   }

@@ -133,6 +133,14 @@ export const QUICK_ACTION_GROUPS: QuickActionGroup[] = [
           'I need a pickup and delivery run. Help me create a delivery request from my location to [destination] for [items].',
       },
       {
+        id: 'doordash-candy-test',
+        icon: '🍬',
+        label: 'DD Candy Test',
+        description: 'Run a prebuilt DoorDash test to Times Square.',
+        prefill:
+          'Use create_delivery with pickup_address "157 William St, New York, NY 10038", dropoff_address "Times Square, Manhattan, New York, NY 10036", and items "Candy".',
+      },
+      {
         id: 'web-search',
         icon: '🔍',
         label: 'Search',

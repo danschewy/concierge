@@ -1,0 +1,25 @@
+{
+  "tasks": [
+    {
+      "ride_id": "ride-1234567890-1234",
+      "stage_schedule": [
+        {
+          "status": "driver_assigned",
+          "delay_seconds": 0
+        },
+        {
+          "status": "en_route",
+          "delay_seconds": 20
+        },
+        {
+          "status": "arriving",
+          "delay_seconds": 45
+        },
+        {
+          "status": "complete",
+          "delay_seconds": 75
+        }
+      ]
+    }
+  ]
+}

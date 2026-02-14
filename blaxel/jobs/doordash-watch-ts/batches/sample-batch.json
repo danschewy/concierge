@@ -1,0 +1,9 @@
+{
+  "tasks": [
+    {
+      "delivery_id": "gotham-1234567890",
+      "poll_interval_seconds": 30,
+      "max_polls": 10
+    }
+  ]
+}

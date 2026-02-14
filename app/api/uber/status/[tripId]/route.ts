@@ -1,4 +1,9 @@
 import { NextResponse } from 'next/server';
+import * as uber from '@/lib/services/uber';
+import { parseTrackingQuery } from '@/lib/utils/tracking';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET(
   request: Request,
@@ -6,6 +11,12 @@ export async function GET(
 ) {
   try {
     const { tripId } = await params;
+    const { searchParams } = new URL(request.url);
+    const tracking = parseTrackingQuery(searchParams);
+    const pickup = searchParams.get('pickup') ?? undefined;
+    const dropoff = searchParams.get('dropoff') ?? undefined;
+    const rideType = searchParams.get('ride_type') ?? undefined;
+    const vehicle = searchParams.get('vehicle') ?? undefined;
 
     if (!tripId) {
       return NextResponse.json(
@@ -14,28 +25,13 @@ export async function GET(
       );
     }
 
-    // Mock ride status
-    const status = {
-      id: tripId,
-      driverName: 'Marcus',
-      vehicle: 'Black Tesla Model Y',
-      licensePlate: 'T649-82C',
-      etaMinutes: 3,
-      fare: '$24',
-      status: 'en_route',
-      pickup: 'Broadway & Spring St',
-      dropoff: 'David Geffen Hall',
-      routeCoordinates: [
-        [-73.9976, 40.7243],
-        [-74.006, 40.7258],
-        [-74.0099, 40.731],
-        [-74.0089, 40.742],
-        [-74.002, 40.756],
-        [-73.987, 40.768],
-        [-73.9835, 40.7725],
-      ],
-      driverLocation: [-74.002, 40.742],
-    };
+    const status = await uber.getRideStatus(tripId, {
+      pickup,
+      dropoff,
+      rideType,
+      vehicle,
+      tracking,
+    });
 
     return NextResponse.json(status);
   } catch (error) {

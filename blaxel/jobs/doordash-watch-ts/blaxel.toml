@@ -1,0 +1,12 @@
+type = "job"
+name = "doordash-delivery-watch"
+# workspace = "my-workspace"
+
+# policies = ["eu"]
+
+# [env]
+# DEFAULT_CITY = "San Francisco"
+
+[runtime]
+timeout = "30m"
+maxRetries = 0

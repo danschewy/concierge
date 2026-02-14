@@ -68,7 +68,7 @@ Real provider calls when configured:
 - OpenWeather
 - DoorDash Drive
 - Plaid
-- Blaxel Agent proxy
+- Blaxel Batch Jobs (long-running task orchestration)
 
 Mock-first or mock-only paths in current code:
 
@@ -156,9 +156,25 @@ PLAID_CLIENT_ID=
 PLAID_SECRET=
 PLAID_ACCESS_TOKEN=
 
-# Optional external agent backend
+# Blaxel long-running jobs (recommended for polling and delayed tasks)
+BLAXEL_API_KEY=
+BLAXEL_API_BASE_URL=https://api.blaxel.ai/v0
+BLAXEL_DOORDASH_WATCH_JOB_ID=
+BLAXEL_MOCK_UBER_DELAY_JOB_ID=
+
+# Optional legacy agent-proxy URL
 BLAXEL_AGENT_URL=
 ```
+
+## Blaxel Long-Running Tasks
+
+This app can run background workflows using Blaxel Jobs:
+
+- `doordash_delivery_watch`: watch a DoorDash delivery over time
+- `mock_uber_delay`: drive staged mock-ride progression with delayed states
+
+If job IDs are configured, delivery/ride cards include a `tracking` block and live-update while polling status routes.
+If Blaxel is not configured, the app falls back to local task refs and still updates mock Uber status on a time-based timeline.
 
 ## Run Locally
 

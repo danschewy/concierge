@@ -52,6 +52,11 @@ const REFERENCE_SUBWAY_STATIONS: ReferenceStation[] = [
   { name: '125 St', latitude: 40.807722, longitude: -73.945495 },
 ];
 
+const DOORDASH_FALLBACK_PICKUP_ADDRESS =
+  '157 William St, New York, NY 10038';
+const DOORDASH_FALLBACK_DROPOFF_ADDRESS =
+  'Times Square, Manhattan, New York, NY 10036';
+
 function parseUserLocation(value: unknown): UserLocation | null {
   if (!value || typeof value !== 'object') {
     return null;
@@ -144,11 +149,46 @@ function formatCoordinateLabel(userLocation: UserLocation): string {
   return `Current location (${userLocation.latitude.toFixed(5)}, ${userLocation.longitude.toFixed(5)})`;
 }
 
-function applyUserLocationDefaults(
+async function reverseGeocodeAddress(
+  userLocation: UserLocation
+): Promise<string | null> {
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+  if (!mapboxToken) {
+    return null;
+  }
+
+  const endpoint =
+    `https://api.mapbox.com/geocoding/v5/mapbox.places/` +
+    `${userLocation.longitude},${userLocation.latitude}.json` +
+    `?access_token=${encodeURIComponent(mapboxToken)}&types=address,place&limit=1`;
+
+  try {
+    const response = await fetch(endpoint, { cache: 'no-store' });
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      features?: Array<{ place_name?: unknown }>;
+    };
+    const firstMatch = data.features?.[0]?.place_name;
+    return typeof firstMatch === 'string' && firstMatch.trim().length > 0
+      ? firstMatch
+      : null;
+  } catch (error) {
+    console.error(
+      'Failed to reverse geocode browser coordinates for DoorDash:',
+      error
+    );
+    return null;
+  }
+}
+
+async function applyUserLocationDefaults(
   toolName: string,
   toolInput: Record<string, unknown>,
   userLocation: UserLocation | null
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
   if (!userLocation) {
     return toolInput;
   }
@@ -200,20 +240,31 @@ function applyUserLocationDefaults(
     case 'create_delivery': {
       const pickupAddress = toolInput.pickup_address;
       const dropoffAddress = toolInput.dropoff_address;
+      const normalizedPickup =
+        typeof pickupAddress === 'string' ? pickupAddress.trim() : '';
+      const normalizedDropoff =
+        typeof dropoffAddress === 'string' ? dropoffAddress.trim() : '';
+      const pickupNeedsFallback =
+        !normalizedPickup || isLocationPlaceholder(normalizedPickup);
+      const dropoffNeedsFallback =
+        normalizedDropoff.length > 0 && isLocationPlaceholder(normalizedDropoff);
+
+      let resolvedUserAddress: string | null = null;
+      if (pickupNeedsFallback || dropoffNeedsFallback) {
+        resolvedUserAddress = await reverseGeocodeAddress(userLocation);
+      }
+
       return {
         ...toolInput,
-        pickup_address:
-          typeof pickupAddress === 'string' &&
-          pickupAddress.trim().length > 0 &&
-          !isLocationPlaceholder(pickupAddress)
-            ? pickupAddress
-            : formatCoordinateLabel(userLocation),
+        pickup_address: pickupNeedsFallback
+          ? (resolvedUserAddress ?? DOORDASH_FALLBACK_PICKUP_ADDRESS)
+          : pickupAddress,
         dropoff_address:
-          typeof dropoffAddress === 'string' &&
-          dropoffAddress.trim().length > 0 &&
-          !isLocationPlaceholder(dropoffAddress)
+          !normalizedDropoff
             ? dropoffAddress
-            : formatCoordinateLabel(userLocation),
+            : isLocationPlaceholder(normalizedDropoff)
+              ? (resolvedUserAddress ?? DOORDASH_FALLBACK_DROPOFF_ADDRESS)
+              : dropoffAddress,
       };
     }
 
@@ -404,7 +455,7 @@ export async function POST(request: Request) {
                 // Process all accumulated tool_use blocks
                 if (toolUseBlocks.length > 0) {
                   for (const tool of toolUseBlocks) {
-                    tool.input = applyUserLocationDefaults(
+                    tool.input = await applyUserLocationDefaults(
                       tool.name,
                       tool.input,
                       userLocation

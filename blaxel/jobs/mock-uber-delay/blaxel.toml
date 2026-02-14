@@ -1,0 +1,12 @@
+type = "job"
+name = "mock-uber-delay"
+# workspace = "my-workspace"
+
+# policies = ["eu"]
+
+# [env]
+# DEFAULT_CITY = "San Francisco"
+
+[runtime]
+timeout = "15m"
+maxRetries = 0

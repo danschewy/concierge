@@ -27,6 +27,19 @@ export interface ChatMessage {
 
 export type AgentState = 'idle' | 'thinking' | 'executing' | 'done';
 
+export type AsyncTaskKind = 'doordash_delivery_watch' | 'mock_uber_delay';
+export type AsyncTaskProvider = 'blaxel' | 'local';
+export type AsyncTaskStatus = 'queued' | 'running' | 'success' | 'failed';
+
+export interface AsyncTaskRef {
+  kind: AsyncTaskKind;
+  provider: AsyncTaskProvider;
+  executionId: string;
+  jobId?: string;
+  status: AsyncTaskStatus;
+  createdAt: string;
+}
+
 // Calendar
 export interface CalendarEvent {
   id: string;
@@ -96,6 +109,7 @@ export interface RideStatus {
   dropoff: string;
   routeCoordinates?: [number, number][];
   driverLocation?: [number, number];
+  tracking?: AsyncTaskRef;
 }
 
 // Food Order
@@ -127,6 +141,11 @@ export interface ErrandStatus {
   dasherName?: string;
   status: 'assigned' | 'picking_up' | 'en_route' | 'delivered';
   etaMinutes: number;
+  tracking?: AsyncTaskRef;
+  source?: 'live' | 'mock';
+  doordashStatus?: string;
+  doordashSupportReference?: string;
+  trackingUrl?: string;
 }
 
 // Reservation
