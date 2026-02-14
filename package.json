@@ -9,9 +9,19 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.74.0",
+    "@elevenlabs/react": "^0.14.0",
+    "@types/mapbox-gl": "^3.4.1",
+    "framer-motion": "^12.34.0",
+    "gtfs-realtime-bindings": "^1.1.1",
+    "lucide-react": "^0.564.0",
+    "mapbox-gl": "^3.18.1",
     "next": "16.1.6",
+    "protobufjs": "^7.5.4",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-map-gl": "^8.1.0",
+    "recharts": "^3.7.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
