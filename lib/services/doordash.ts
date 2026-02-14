@@ -193,7 +193,7 @@ export async function createDelivery(
         : externalDeliveryId;
     const tracking = await startDeliveryWatchTask(id, pickup, dropoff, items);
 
-    const delivery = {
+    const delivery: ErrandStatus = {
       id,
       pickupAddress: asString(data.pickup_address) ?? pickup,
       dropoffAddress: asString(data.dropoff_address) ?? dropoff,

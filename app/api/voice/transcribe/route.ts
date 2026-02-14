@@ -34,7 +34,7 @@ function getTextFromResponse(payload: unknown): string {
   return '';
 }
 
-function isBlobLike(value: FormDataEntryValue | null): value is Blob {
+function isBlobLike(value: unknown): value is Blob {
   return !!value && typeof value === 'object' && 'size' in value && 'type' in value;
 }
 
