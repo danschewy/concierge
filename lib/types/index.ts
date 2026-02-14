@@ -139,6 +139,7 @@ export interface Reservation {
   confirmationCode: string;
   source: 'resy' | 'opentable';
   status: 'confirmed' | 'pending';
+  bookingUrl?: string;
 }
 
 // Event
@@ -184,4 +185,12 @@ export interface Restaurant {
   address: string;
   isOpen: boolean;
   photoUrl?: string;
+}
+
+export interface MissionHistoryItem {
+  id: string;
+  command: string;
+  summary: string;
+  completedAt: string;
+  status: 'completed';
 }

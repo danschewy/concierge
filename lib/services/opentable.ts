@@ -1,5 +1,6 @@
 import type { Reservation } from '@/lib/types';
 import { mockReservation } from '@/lib/mock-data';
+import { buildBookingRedirectUrl } from '@/lib/utils/booking-urls';
 
 /**
  * OpenTable reservation service (MOCK ONLY).
@@ -18,6 +19,13 @@ export async function bookReservation(
   await new Promise((resolve) => setTimeout(resolve, 500));
 
   const confirmationCode = `OT-${Math.floor(10000 + Math.random() * 90000)}`;
+  const bookingUrl = buildBookingRedirectUrl({
+    provider: 'opentable',
+    venue: venueId,
+    date,
+    time,
+    partySize,
+  });
 
   return {
     ...mockReservation,
@@ -28,6 +36,7 @@ export async function bookReservation(
     partySize,
     confirmationCode,
     source: 'opentable',
-    status: 'confirmed',
+    status: 'pending',
+    bookingUrl,
   };
 }

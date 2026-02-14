@@ -4,12 +4,24 @@ import CardShell from '@/components/shared/CardShell';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { Star, MapPin } from 'lucide-react';
 import type { Restaurant } from '@/lib/types';
+import { buildBookingRedirectUrl } from '@/lib/utils/booking-urls';
 
 interface RestaurantCardProps {
   data: Restaurant;
 }
 
 export default function RestaurantCard({ data }: RestaurantCardProps) {
+  const resyUrl = buildBookingRedirectUrl({
+    provider: 'resy',
+    venue: data.name,
+    address: data.address,
+  });
+  const openTableUrl = buildBookingRedirectUrl({
+    provider: 'opentable',
+    venue: data.name,
+    address: data.address,
+  });
+
   return (
     <CardShell>
       <div className="space-y-2.5">
@@ -43,12 +55,22 @@ export default function RestaurantCard({ data }: RestaurantCardProps) {
         </div>
 
         <div className="flex gap-2 pt-1 border-t border-zinc-800">
-          <button className="flex-1 text-xs text-center py-1.5 rounded-md bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-colors">
+          <a
+            href={resyUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-xs text-center py-1.5 rounded-md bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-colors"
+          >
             Book on Resy
-          </button>
-          <button className="flex-1 text-xs text-center py-1.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors">
+          </a>
+          <a
+            href={openTableUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 text-xs text-center py-1.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
+          >
             Book on OpenTable
-          </button>
+          </a>
         </div>
       </div>
     </CardShell>
