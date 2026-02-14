@@ -99,7 +99,18 @@ export const TOOL_DEFINITIONS: Tool[] = [
       'Get current weather conditions and hourly forecast for New York City. Returns temperature, feels-like, wind speed, humidity, and conditions. Always call this before recommending outdoor activities, walking routes, or Citi Bike rides.',
     input_schema: {
       type: 'object',
-      properties: {},
+      properties: {
+        latitude: {
+          type: 'number',
+          description:
+            'Optional latitude override. If omitted, defaults to the user location.',
+        },
+        longitude: {
+          type: 'number',
+          description:
+            'Optional longitude override. If omitted, defaults to the user location.',
+        },
+      },
       required: [],
     },
   },

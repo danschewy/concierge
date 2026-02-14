@@ -22,7 +22,8 @@ export interface GetSubwayStatusInput {
 }
 
 export interface GetWeatherInput {
-  // defaults to user location
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface GetBikeAvailabilityInput {

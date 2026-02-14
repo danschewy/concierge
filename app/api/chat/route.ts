@@ -29,6 +29,66 @@ const TOOL_CARD_MAP: Partial<Record<ToolName, string>> = {
   add_to_calendar: 'calendar',
 };
 
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+}
+
+function parseUserLocation(value: unknown): UserLocation | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const latitude = (value as { latitude?: unknown }).latitude;
+  const longitude = (value as { longitude?: unknown }).longitude;
+
+  if (
+    typeof latitude !== 'number' ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90
+  ) {
+    return null;
+  }
+
+  if (
+    typeof longitude !== 'number' ||
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180
+  ) {
+    return null;
+  }
+
+  return { latitude, longitude };
+}
+
+function applyUserLocationDefaults(
+  toolName: string,
+  toolInput: Record<string, unknown>,
+  userLocation: UserLocation | null
+): Record<string, unknown> {
+  if (!userLocation) {
+    return toolInput;
+  }
+
+  if (toolName !== 'get_weather' && toolName !== 'get_bike_availability') {
+    return toolInput;
+  }
+
+  return {
+    ...toolInput,
+    latitude:
+      typeof toolInput.latitude === 'number'
+        ? toolInput.latitude
+        : userLocation.latitude,
+    longitude:
+      typeof toolInput.longitude === 'number'
+        ? toolInput.longitude
+        : userLocation.longitude,
+  };
+}
+
 function createSSEEvent(data: Record<string, unknown>): string {
   return JSON.stringify(data) + '\n';
 }
@@ -70,7 +130,12 @@ function createMockStream(): ReadableStream {
 
 export async function POST(request: Request) {
   try {
-    const { messages } = await request.json();
+    const payload = (await request.json()) as {
+      messages?: unknown;
+      userLocation?: unknown;
+    };
+    const messages = payload.messages;
+    const userLocation = parseUserLocation(payload.userLocation);
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -118,7 +183,7 @@ export async function POST(request: Request) {
             const response = await anthropic.messages.create({
               model: 'claude-sonnet-4-20250514',
               max_tokens: 4096,
-              system: getSystemPrompt(),
+              system: getSystemPrompt(userLocation),
               tools: TOOL_DEFINITIONS as Anthropic.Tool[],
               messages: currentMessages,
               stream: true,
@@ -206,6 +271,12 @@ export async function POST(request: Request) {
                 // Process all accumulated tool_use blocks
                 if (toolUseBlocks.length > 0) {
                   for (const tool of toolUseBlocks) {
+                    tool.input = applyUserLocationDefaults(
+                      tool.name,
+                      tool.input,
+                      userLocation
+                    );
+
                     // Send tool_call event
                     controller.enqueue(
                       encoder.encode(createSSEEvent({

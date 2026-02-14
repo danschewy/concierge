@@ -56,7 +56,10 @@ export async function executeTool(
     }
 
     case 'get_weather': {
-      const result = await weather.getWeather();
+      const result = await weather.getWeather(
+        toolArgs.latitude as number | undefined,
+        toolArgs.longitude as number | undefined
+      );
       return { result, cardType: 'weather' };
     }
 

@@ -30,10 +30,17 @@ interface StreamEvent {
   cardType?: CardType;
 }
 
+interface UserLocation {
+  latitude: number;
+  longitude: number;
+}
+
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>(getDemoMessages());
   const [isProcessing, setIsProcessing] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
+  const userLocationRef = useRef<UserLocation | null>(null);
+  const hasPromptedForLocationRef = useRef(false);
 
   const addMessage = useCallback((msg: ChatMessage) => {
     setMessages(prev => [...prev, msg]);
@@ -58,6 +65,44 @@ export function useChat() {
     );
   }, []);
 
+  const requestBrowserLocation = useCallback(async (): Promise<UserLocation | null> => {
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) {
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const location = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+          userLocationRef.current = location;
+          resolve(location);
+        },
+        () => resolve(null),
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 5 * 60 * 1000,
+        }
+      );
+    });
+  }, []);
+
+  const resolveUserLocation = useCallback(async (): Promise<UserLocation | null> => {
+    if (userLocationRef.current) {
+      return userLocationRef.current;
+    }
+
+    if (hasPromptedForLocationRef.current) {
+      return null;
+    }
+
+    hasPromptedForLocationRef.current = true;
+    return requestBrowserLocation();
+  }, [requestBrowserLocation]);
+
   const sendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isProcessing) return;
 
@@ -78,11 +123,15 @@ export function useChat() {
       .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
 
     try {
+      const userLocation = await resolveUserLocation();
       abortRef.current = new AbortController();
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: apiMessages }),
+        body: JSON.stringify({
+          messages: apiMessages,
+          userLocation: userLocation ?? undefined,
+        }),
         signal: abortRef.current.signal,
       });
 
@@ -259,7 +308,7 @@ export function useChat() {
       setIsProcessing(false);
     }
 
-  }, [messages, isProcessing, addMessage, updateMessage, appendMessageContent]);
+  }, [messages, isProcessing, addMessage, updateMessage, appendMessageContent, resolveUserLocation]);
 
   const cancelRequest = useCallback(() => {
     abortRef.current?.abort();
