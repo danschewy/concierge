@@ -84,6 +84,7 @@ Mock-first or mock-only paths in current code:
 ### Core chat
 
 - `POST /api/chat` (streaming NDJSON events)
+- `POST /api/voice/transcribe` (multipart audio -> ElevenLabs STT text)
 
 ### Transit and weather
 
@@ -130,10 +131,13 @@ Create `.env.local` in the project root (`concierge/`) and add what you need.
 ```bash
 # AI
 ANTHROPIC_API_KEY=
+ELEVENLABS_API_KEY=
 
-# Map / Voice (client-side)
+# Map / Voice
 NEXT_PUBLIC_MAPBOX_TOKEN=
 NEXT_PUBLIC_ELEVENLABS_AGENT_ID=
+ELEVENLABS_STT_MODEL_ID=scribe_v1
+ELEVENLABS_STT_LANGUAGE_CODE=en
 
 # Search / Discovery
 TICKETMASTER_API_KEY=

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { MapPin, Settings } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import BlaxelStatus from '@/components/widgets/BlaxelStatus';
 import WeatherMini from '@/components/widgets/WeatherMini';
 import type { WeatherData } from '@/lib/types';
@@ -106,12 +106,6 @@ export default function Header() {
             <BlaxelStatus />
           </div>
           <span className="font-mono text-xs text-zinc-500">{now}</span>
-          <button
-            className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800 transition-colors"
-            aria-label="Settings"
-          >
-            <Settings className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </header>
